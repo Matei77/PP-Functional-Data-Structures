@@ -1,3 +1,4 @@
+-- Copyright Ionescu Matei-Stefan - 323CA - 2022-2023
 module BinaryNumber where
 
 import Data.List
