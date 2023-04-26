@@ -28,7 +28,7 @@ type BinaryNumber = [Int]
     6
 -}
 toDecimal :: BinaryNumber -> Int
-toDecimal = undefined
+toDecimal = foldl (+) 0 . map (\(i, x) -> x * 2^i) . zip [0..]
 
 {-
     *** TODO ***
@@ -51,7 +51,7 @@ toDecimal = undefined
     [0,1,1,0,0,0,0,0,0,0]
 -}
 toBinary :: Int -> BinaryNumber
-toBinary = undefined
+toBinary = unfoldr (\(d, r) -> Just (r, divMod d 2)) . (\x -> divMod x 2)
 
 {-
     *** TODO ***
@@ -72,7 +72,8 @@ toBinary = undefined
     [0,0,0,1]
 -}
 inc :: BinaryNumber -> BinaryNumber
-inc bits = undefined
+inc (1:bits) = [0] ++ inc bits
+inc (0:bits) = [1] ++ bits
 
 {-
    *** TODO ***
@@ -93,7 +94,8 @@ inc bits = undefined
     [1,1,1]
 -}
 dec :: BinaryNumber -> BinaryNumber
-dec bits = undefined
+dec (0:bits) = [1] ++ dec bits
+dec (1:bits) = [0] ++ bits
 
 {-
     *** TODO ***
@@ -119,7 +121,8 @@ dec bits = undefined
     197
 -}
 add :: BinaryNumber -> BinaryNumber -> BinaryNumber
-add bits1 bits2 = undefined
+add bits1 bits2 = snd (mapAccumL calcuate_sum 0 (zip bits1 bits2)) where
+    calcuate_sum = \carry (bit1, bit2) -> (if ( bit1 + bit2 + carry <= 1) then 0 else 1, (bit1 + bit2 + carry) `mod` 2)
 
 {-
     *** TODO ***
@@ -152,7 +155,9 @@ add bits1 bits2 = undefined
     [[0,1,1,0,0,0],[0,0,0,0,0,0],[0,0,0,1,1,0]]
 -}
 stack :: BinaryNumber -> BinaryNumber -> [BinaryNumber]
-stack bits1 bits2 = undefined
+stack bits1 bits2 = [x | x <- map (\(iter, bit2) -> (take iter zeros) ++ (if (bit2 == 1) then bits1 else zeros)) (zip naturals bits2)] where
+    naturals = [0..]
+    zeros = repeat 0
 
 {-
     *** TODO ***
@@ -173,7 +178,8 @@ stack bits1 bits2 = undefined
     [0,6,6,30,30]
 -}
 multiply :: BinaryNumber -> BinaryNumber -> [BinaryNumber]
-multiply bits1 bits2 = undefined
+multiply bits1 bits2 = scanl (\acc x -> (add acc x)) zeros (stack bits1 bits2) where
+    zeros = repeat 0
 
 {-
     *** TODO ***
