@@ -255,7 +255,7 @@ zipExtend a' b' (a : as) (b : bs) = (a, b) : zipExtend a' b' as bs
     Operația o oglindește pe cea de adunare a două numere binare din etapa 1.
 
     Constrângeri:
-    * evitați recursivitatea explicită
+    * evitați recursivitatea explicită~
     * utilizați funcția zipExtend pt a facilita aplicarea unor funcționale.
 
     Exemple:
@@ -317,13 +317,13 @@ merge heap1 heap2 = BinomialHeap {size = newSize, trees = newTrees}
 -}
 isolate :: a -> [a] -> [(a, [a])]
 isolate placeHolder [] = []
-isolate placeHolder list = (zip list replaced_lists) ++ last_pair
+isolate placeHolder list = (zip list replacedLists) ++ lastPair
     where
-        replaced_lists = (map (list_for_nth) (take l [0..]))
-        last_pair = [(head (drop l list), take l list)]
-        
+        replacedLists = (map (replaceNthElem) (take l [0..]))
+        lastPair = [(head (drop l list), take l list)]
+
         l = ((length list) - 1)
-        list_for_nth = (\n -> (take n list) ++ [placeHolder] ++ (drop (n + 1) list))
+        replaceNthElem = (\n -> (take n list) ++ [placeHolder] ++ (drop (n + 1) list))
 
 {-
     *** TODO ***
@@ -367,7 +367,34 @@ isolate placeHolder list = (zip list replaced_lists) ++ last_pair
     evaluării leneșe la utilizarea eficientă a funcției isolate?
 -}
 removeMin :: (Ord p, Eq k) => BinomialHeap p k -> BinomialHeap p k
-removeMin heap = undefined
+removeMin heap = case (size heap) < 2 of
+    True -> emptyHeap
+    _ -> BinomialHeap{size = newSize, trees = rearangedTrees}
+
+    where
+        -- gaseste elementul cu prioriatea minima
+        minElemValues = (findMin heap)
+
+        -- izoleaza fiecare tree din heap
+        isolatedTrees = (isolate EmptyTree (trees heap))
+
+        -- gaseste elementul minim izolat
+        minIsolatedTree = (head (filter (filterCond) isolatedTrees))
+
+        -- reorganizeaza lista de tree-uri din heap
+        rearangedTrees = mergeTrees (snd minIsolatedTree) (reverse (children (fst minIsolatedTree)))
+
+        -- modifica marimea heapului
+        newSize = ((size heap) - 1)
+
+        -- conditie pentru gasirea minimului din isolatedTrees
+        filterCond = (\(x) ->
+            case minElemValues of
+                Nothing -> False
+                Just y -> case (fst x) of
+                    EmptyTree -> False 
+                    _ -> snd y == key (fst x))
+
 
 {-
     *** TODO ***
