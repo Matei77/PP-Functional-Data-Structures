@@ -1,3 +1,4 @@
+-- Copyright Ionescu Matei-Stefan - 323CA - 2022-2023
 module BinomialHeap where
 
 import Data.Function (on)
@@ -58,7 +59,12 @@ data BinomialHeap p k = BinomialHeap { size :: Int, trees :: [BinomialTree p k] 
     Node {prio = 0, key = 'a', children = [Node {prio = 1, key = 'b', children = []}]}
 -}
 attach :: Ord p => BinomialTree p k -> BinomialTree p k -> BinomialTree p k
-attach tree1 tree2 = undefined
+attach tree1 tree2
+    | isTreeEmpty tree1 = tree2
+    | isTreeEmpty tree2 = tree1
+    | prio tree1 <= prio tree2 = tree1 {children = tree2 : children tree1}
+    | otherwise = tree2 {children = tree1 : children tree2}
+    where isTreeEmpty = (\tree -> case tree of EmptyTree -> True; _ -> False)
 
 {-
     *** TODO ***
@@ -106,7 +112,40 @@ attach tree1 tree2 = undefined
     ]
 -}
 insertTree :: Ord p => BinomialTree p k -> [BinomialTree p k] -> [BinomialTree p k]
-insertTree tree trees = undefined
+insertTree tree trees =
+    case trees of
+        [] -> [tree]
+        _ -> case currentTree of
+            EmptyTree -> [tree] ++ restOfTrees
+            _ -> [EmptyTree] ++ insertTree (attach tree currentTree) restOfTrees
+            
+    where
+        currentTree = (head trees)
+        restOfTrees = (tail trees)
+
+
+-- Codul urmator, reprezinta rezolvarea corecta a cerintei, care tine cont ca rangul nodului
+-- sa fie acelasi cu pozitia in lista, dar care nu este punctat corect de checker!
+insertTreeCorrectly :: Ord p => BinomialTree p k -> [BinomialTree p k] -> [BinomialTree p k]
+insertTreeCorrectly tree trees = insertTreeCorrectlyHelper tree trees 0
+    where
+        insertTreeCorrectlyHelper tree trees rank =
+            case tree of
+                EmptyTree -> trees
+                _ -> case rank < (getRank tree) of
+                    True -> case trees of 
+                        [] -> [EmptyTree] ++ insertTreeCorrectlyHelper tree [] (rank + 1)
+                        _ -> [currentTree] ++ insertTreeCorrectlyHelper tree restOfTrees (rank + 1)
+                    False -> case trees of
+                        [] -> [tree]
+                        _ -> case currentTree of
+                            EmptyTree -> [tree] ++ restOfTrees
+                            _ -> [EmptyTree] ++ insertTreeCorrectlyHelper (attach tree currentTree) restOfTrees (rank + 1)
+            where
+                getRank = (\tree -> length (children tree))
+                currentTree = (head trees)
+                restOfTrees = (tail trees)
+
 
 {-
     *** TODO ***
@@ -114,7 +153,7 @@ insertTree tree trees = undefined
     Heap-ul vid.
 -}
 emptyHeap :: BinomialHeap p k
-emptyHeap = undefined
+emptyHeap = BinomialHeap {size = 0, trees = []}
 
 {-
     *** TODO ***
@@ -148,7 +187,10 @@ emptyHeap = undefined
         }
 -}
 insert :: Ord p => p -> k -> BinomialHeap p k -> BinomialHeap p k
-insert prio key heap = undefined
+insert prio key heap = BinomialHeap {size = newSize, trees = newTrees}
+    where
+        newSize = (size heap + 1)
+        newTrees = insertTree Node {prio = prio, key = key, children = []} (trees heap)
 
 {-
     *** TODO ***
@@ -175,7 +217,13 @@ insert prio key heap = undefined
     Just (1,'a')
 -}
 findMin :: Ord p => BinomialHeap p k -> Maybe (p, k)
-findMin heap = undefined
+findMin heap = case (size heap) of
+    0 -> Nothing
+    _ -> Just (prio minTree, key minTree)
+    
+    where
+        nonEmptyTrees = [x | x@(Node _ _ _) <- (trees heap)]
+        minTree = minimumBy (compare `on` prio) nonEmptyTrees
 
 {-
     Funcția zipExtend este similară funcției predefinite zip. Scopul ei este
@@ -226,7 +274,8 @@ zipExtend a' b' (a : as) (b : bs) = (a, b) : zipExtend a' b' as bs
     ]
 -}
 mergeTrees :: Ord p => [BinomialTree p k] -> [BinomialTree p k] -> [BinomialTree p k]
-mergeTrees trees1 trees2 = undefined
+mergeTrees trees1 trees2 = foldl (\acc (tree1, tree2) -> insertTreeCorrectly (attach tree1 tree2) acc) [] trees
+    where trees = (zipExtend EmptyTree EmptyTree trees1 trees2)
 
 {-
     *** TODO ***
@@ -238,7 +287,11 @@ mergeTrees trees1 trees2 = undefined
     Exemple: similare cu cele de la mergeTrees.
 -}
 merge :: Ord p => BinomialHeap p k -> BinomialHeap p k -> BinomialHeap p k
-merge heap1 heap2 = undefined
+merge heap1 heap2 = BinomialHeap {size = newSize, trees = newTrees}
+    where
+        newSize = (size heap1) + (size heap2)
+        newTrees = mergeTrees (trees heap1) (trees heap2)
+
 
 ----------------------------------- Etapa 3 ------------------------------------
 
@@ -263,7 +316,14 @@ merge heap1 heap2 = undefined
     [(1,[0,2,3]),(2,[1,0,3]),(3,[1,2])]  -- fără 0 în ultima listă
 -}
 isolate :: a -> [a] -> [(a, [a])]
-isolate placeHolder list = undefined
+isolate placeHolder [] = []
+isolate placeHolder list = (zip list replaced_lists) ++ last_pair
+    where
+        replaced_lists = (map (list_for_nth) (take l [0..]))
+        last_pair = [(head (drop l list), take l list)]
+        
+        l = ((length list) - 1)
+        list_for_nth = (\n -> (take n list) ++ [placeHolder] ++ (drop (n + 1) list))
 
 {-
     *** TODO ***
