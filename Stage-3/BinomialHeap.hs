@@ -574,17 +574,8 @@ instance Functor (BinomialHeap p) where
 -}
 instance Foldable (BinomialTree p) where
     -- foldr :: (k -> b -> b) -> b -> BinomialTree p k -> b
-    -- foldr f acc EmptyTree = acc
-    -- foldr f acc (Node _ key []) = f key acc
-    -- foldr f acc (Node _ key children) = f key (foldr f acc (foldr (.) acc children))
-   
     foldr f acc EmptyTree = acc
-    foldr f acc (Node _ kkey cchildren) = ((f kkey) . (foldr (.) id childrenFold)) acc
-
-        where
-            childrenFold = (map (\x -> f (key x)) cchildren)
-
-    --foldr f acc tree = f (key tree) (foldr f acc (map (\x -> foldr f acc x) (children tree)))
-
-
-        --map (\x -> foldr f (acc . (f (key x))) x) (children tree)
+    foldr f acc (Node _ k c) = (f k) . (composed c) $ acc
+        where 
+            composed ch1 = foldr (.) id (childFunctions ch1)
+            childFunctions ch2 = map (\x -> (f (key x)) . (composed (children x))) ch2
