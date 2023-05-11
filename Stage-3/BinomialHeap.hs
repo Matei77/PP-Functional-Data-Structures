@@ -469,7 +469,7 @@ instance (Show p, Show k) => Show (BinomialTree p k) where
       2 ('b')
 -}
 instance (Show p, Show k) => Show (BinomialHeap p k) where
-    show heap = undefined
+    show heap = intercalate "\n" (map (\x -> show x) (trees heap))
 
 {-
     *** TODO ***
@@ -492,7 +492,13 @@ instance (Show p, Show k) => Show (BinomialHeap p k) where
 -}
 instance Functor (BinomialTree p) where
     -- fmap :: (k1 -> k2) -> BinomialTree p k1 -> BinomialTree p k2
-    fmap f tree = undefined
+    fmap f EmptyTree = EmptyTree
+    fmap f tree = Node {prio = newPrio, key = newKey, children = newChildren}
+        where
+            newPrio = (prio tree)
+            newKey = (f (key tree))
+            newChildren = (map (\x -> fmap f x) (children tree))
+
 
 {-
     *** TODO ***
@@ -515,7 +521,10 @@ instance Functor (BinomialTree p) where
 -}
 instance Functor (BinomialHeap p) where
     -- fmap :: (k1 -> k2) -> BinomialHeap p k1 -> BinomialHeap p k2
-    fmap f heap = undefined
+    fmap f heap = BinomialHeap { size = newSize, trees = newTrees }
+        where
+            newSize = (size heap)
+            newTrees = (map (\x -> fmap f x) (trees heap))
 
 {-
     *** TODO BONUS ***
@@ -565,4 +574,18 @@ instance Functor (BinomialHeap p) where
 -}
 instance Foldable (BinomialTree p) where
     -- foldr :: (k -> b -> b) -> b -> BinomialTree p k -> b
-    foldr f acc tree = undefined
+    -- foldr f acc EmptyTree = acc
+    -- foldr f acc (Node _ key []) = f key acc
+    -- foldr f acc (Node _ key children) = f key (foldr f acc (foldr (.) acc children))
+   
+    foldr f acc EmptyTree = acc
+    foldr f acc (Node _ kkey []) = f kkey acc
+    foldr f acc (Node _ kkey children) = f acc (foldr (.) kkey childrenFold)
+
+        where
+            childrenFold = (map (\x -> f (key x)) children)
+
+    --foldr f acc tree = f (key tree) (foldr f acc (map (\x -> foldr f acc x) (children tree)))
+
+
+        --map (\x -> foldr f (acc . (f (key x))) x) (children tree)
