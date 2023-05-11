@@ -579,11 +579,10 @@ instance Foldable (BinomialTree p) where
     -- foldr f acc (Node _ key children) = f key (foldr f acc (foldr (.) acc children))
    
     foldr f acc EmptyTree = acc
-    foldr f acc (Node _ kkey []) = f kkey acc
-    foldr f acc (Node _ kkey children) = f acc (foldr (.) kkey childrenFold)
+    foldr f acc (Node _ kkey cchildren) = ((f kkey) . (foldr (.) id childrenFold)) acc
 
         where
-            childrenFold = (map (\x -> f (key x)) children)
+            childrenFold = (map (\x -> f (key x)) cchildren)
 
     --foldr f acc tree = f (key tree) (foldr f acc (map (\x -> foldr f acc x) (children tree)))
 
