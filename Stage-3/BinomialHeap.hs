@@ -432,8 +432,18 @@ removeMin heap = case (size heap) < 2 of
       2 ('b')
 -}
 instance (Show p, Show k) => Show (BinomialTree p k) where
-    show tree = undefined
-
+    show tree = showHelper tree 1
+        where
+            showHelper tree indent = case tree of
+                EmptyTree -> "*"
+                _ -> show (prio tree) ++ " (" ++ show (key tree) ++ ")" ++
+                    (intercalate "" (map (\x -> "\n" ++ (intercalate "" (replicate (indent) "  "))
+                    ++ showHelper x (indent + 1)) (children tree)))
+                
+                
+                -- _ -> case (children tree) of
+                --     [] ->  show (prio tree) ++ " (" ++ show (key tree) ++ ")"
+            -- _ -> show (prio tree) ++ " (" ++ show (key tree) ++ ") " ++ intercalate (children tree) "  \n"
 {-
     *** TODO ***
 
